@@ -1,7 +1,9 @@
-import 'package:ditonton/common/state_enum.dart';
-import 'package:ditonton/presentation/provider/now_airing_tv_shows_notifier.dart';
+import 'package:ditonton/presentation/bloc/now_airing_tv/now_airing_tv_bloc.dart';
+import 'package:ditonton/presentation/bloc/now_airing_tv/now_airing_tv_event.dart';
+import 'package:ditonton/presentation/bloc/now_airing_tv/now_airing_tv_state.dart';
 import 'package:ditonton/presentation/widgets/tv_show_card_list.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
 
 class NowAiringTvShowsPage extends StatefulWidget {
@@ -16,8 +18,8 @@ class _NowAiringTvShowsPageState extends State<NowAiringTvShowsPage> {
   void initState() {
     super.initState();
     Future.microtask(() =>
-        Provider.of<NowAiringTvShowsNotifier>(context, listen: false)
-            .fetchNowAiringTvShows());
+        Provider.of<NowAiringTvBloc>(context, listen: false)
+            .add(GetNowAiringTvEvent()));
   }
 
   @override
@@ -28,25 +30,30 @@ class _NowAiringTvShowsPageState extends State<NowAiringTvShowsPage> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
-        child: Consumer<NowAiringTvShowsNotifier>(
-          builder: (context, data, child) {
-            if (data.state == RequestState.Loading) {
+        child: BlocBuilder<NowAiringTvBloc, NowAiringTvState>(
+          builder: (context, state) {
+            if (state is NowAiringListEmpty) {
+            }
+            if (state is NowAiringListLoading) {
               return Center(
                 child: CircularProgressIndicator(),
               );
-            } else if (data.state == RequestState.Loaded) {
+            } else if (state is NowAiringListHasData) {
+              final result = state.result;
               return ListView.builder(
+                padding: const EdgeInsets.all(8),
                 itemBuilder: (context, index) {
-                  final tvShow = data.tvShows[index];
+                  final tvShow = result[index];
                   return TvShowCard(tvShow);
                 },
-                itemCount: data.tvShows.length,
+                itemCount: result.length,
+              );
+            } else if (state is NowAiringListError) {
+              return Center(
+                child: Text(state.message),
               );
             } else {
-              return Center(
-                key: Key('error_message'),
-                child: Text(data.message),
-              );
+              return Container();
             }
           },
         ),

@@ -8,7 +8,7 @@ class GetMovieRecommendations {
 
   GetMovieRecommendations(this.repository);
 
-  Future<Either<Failure, List<Movie>>> execute(id) {
+  Future<Either<Failure, List<Movie>>> execute(int id) {
     return repository.getMovieRecommendations(id);
   }
 }

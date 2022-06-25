@@ -1,10 +1,12 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:ditonton/common/constants.dart';
 import 'package:ditonton/domain/entities/tv_season_detail.dart';
-import 'package:ditonton/common/state_enum.dart';
-import 'package:ditonton/presentation/provider/tv_season_detail_notifier.dart';
+import 'package:ditonton/presentation/bloc/season_detail/season_detail_bloc.dart';
+import 'package:ditonton/presentation/bloc/season_detail/season_detail_event.dart';
+import 'package:ditonton/presentation/bloc/season_detail/season_detail_state.dart';
 import 'package:ditonton/presentation/widgets/tv_episode_card_list.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
 
 class TvSeasonDetailPage extends StatefulWidget {
@@ -25,30 +27,32 @@ class _TvSeasonDetailPageState extends State<TvSeasonDetailPage> {
   void initState() {
     super.initState();
     Future.microtask(() {
-      Provider.of<TvSeasonDetailNotifier>(context, listen: false)
-          .fetchTvSeasonDetail(widget.tvId, widget.seasonNumber);
+      Provider.of<SeasonDetailBloc>(context, listen: false)
+          .add(GetSeasonDetailEvent(id: widget.tvId, seasonNumber: widget.seasonNumber));
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Consumer<TvSeasonDetailNotifier>(
-        builder: (context, provider, child) {
-          if (provider.tvSeasonState == RequestState.Loading) {
+      body: BlocBuilder<SeasonDetailBloc, SeasonDetailState>(
+        builder: (context, state) {
+          if (state is SeasonDetailLoading) {
             return Center(
               child: CircularProgressIndicator(),
             );
-          } else if (provider.tvSeasonState == RequestState.Loaded) {
-            final tvSeason = provider.tvSeason;
+          } else if (state is SeasonDetailHasData) {
+            final tvSeason = state.season;
             return SafeArea(
               child: DetailContent(
                 tvSeason,
                 widget.name
               ),
             );
+          } else if (state is SeasonDetailError){
+            return Text(state.message);
           } else {
-            return Text(provider.message);
+            return Container();
           }
         },
       ),

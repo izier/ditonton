@@ -22,6 +22,7 @@ class SSLPinning {
     } else {
       bytes = (await rootBundle.load('certificates/certificates.cer')).buffer.asUint8List();
     }
+    //bytes = (await rootBundle.load('certificates/certificates.cer')).buffer.asUint8List();
     context.setTrustedCertificatesBytes(bytes);
     HttpClient httpClient = HttpClient(context: context);
     httpClient.badCertificateCallback = (X509Certificate cert, String host, int port) => false;

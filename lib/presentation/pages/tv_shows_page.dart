@@ -1,7 +1,15 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:ditonton/common/constants.dart';
-import 'package:ditonton/common/state_enum.dart';
 import 'package:ditonton/domain/entities/tv_show.dart';
+import 'package:ditonton/presentation/bloc/now_airing_tv/now_airing_tv_bloc.dart';
+import 'package:ditonton/presentation/bloc/now_airing_tv/now_airing_tv_event.dart';
+import 'package:ditonton/presentation/bloc/now_airing_tv/now_airing_tv_state.dart';
+import 'package:ditonton/presentation/bloc/popular_tv/popular_tv_bloc.dart';
+import 'package:ditonton/presentation/bloc/popular_tv/popular_tv_event.dart';
+import 'package:ditonton/presentation/bloc/popular_tv/popular_tv_state.dart';
+import 'package:ditonton/presentation/bloc/top_rated_tv/top_rated_tv_bloc.dart';
+import 'package:ditonton/presentation/bloc/top_rated_tv/top_rated_tv_event.dart';
+import 'package:ditonton/presentation/bloc/top_rated_tv/top_rated_tv_state.dart';
 import 'package:ditonton/presentation/pages/about_page.dart';
 import 'package:ditonton/presentation/pages/home_movie_page.dart';
 import 'package:ditonton/presentation/pages/now_airing_tv_shows_page.dart';
@@ -10,9 +18,8 @@ import 'package:ditonton/presentation/pages/top_rated_tv_shows_page.dart';
 import 'package:ditonton/presentation/pages/tv_show_detail_page.dart';
 import 'package:ditonton/presentation/pages/tv_show_search_page.dart';
 import 'package:ditonton/presentation/pages/watchlist_movies_page.dart';
-import 'package:ditonton/presentation/provider/tv_show_list_notifier.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class TvShowsPage extends StatefulWidget {
   static const ROUTE_NAME = '/tv_shows';
@@ -22,16 +29,6 @@ class TvShowsPage extends StatefulWidget {
 }
 
 class _TvShowsPageState extends State<TvShowsPage> {
-  @override
-  void initState() {
-    super.initState();
-    Future.microtask(
-            () => Provider.of<TvShowListNotifier>(context, listen: false)
-          ..fetchNowAiringTvShows()
-          ..fetchPopularTvShows()
-          ..fetchTopRatedTvShows());
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -98,52 +95,85 @@ class _TvShowsPageState extends State<TvShowsPage> {
                 onTap: () =>
                     Navigator.pushNamed(context, NowAiringTvShowsPage.ROUTE_NAME),
               ),
-              Consumer<TvShowListNotifier>(builder: (context, data, child) {
-                final state = data.nowAiringState;
-                if (state == RequestState.Loading) {
-                  return Center(
-                    child: CircularProgressIndicator(),
-                  );
-                } else if (state == RequestState.Loaded) {
-                  return TvShowList(data.nowAiringTvShows);
-                } else {
-                  return Text('Failed');
-                }
-              }),
+              BlocBuilder<NowAiringTvBloc, NowAiringTvState>(
+                builder: (context, state) {
+                  if (state is NowAiringListEmpty) {
+                    context.read<NowAiringTvBloc>().add(GetNowAiringTvEvent());
+                  }
+                  if (state is NowAiringListLoading) {
+                    return Center(
+                      child: CircularProgressIndicator(),
+                    );
+                  } else if (state is NowAiringListHasData) {
+                    final result = state.result;
+                    return TvShowList(result);
+                  } else if (state is NowAiringListError) {
+                    return Expanded(
+                      child: Center(
+                        child: Text(state.message),
+                      ),
+                    );
+                  } else {
+                    return Text('Failed');
+                  }
+                },
+              ),
               _buildSubHeading(
                 title: 'Popular',
                 onTap: () =>
                     Navigator.pushNamed(context, PopularTvShowsPage.ROUTE_NAME),
               ),
-              Consumer<TvShowListNotifier>(builder: (context, data, child) {
-                final state = data.popularTvShowsState;
-                if (state == RequestState.Loading) {
-                  return Center(
-                    child: CircularProgressIndicator(),
-                  );
-                } else if (state == RequestState.Loaded) {
-                  return TvShowList(data.popularTvShows);
-                } else {
-                  return Text('Failed');
-                }
-              }),
+              BlocBuilder<PopularTvBloc, PopularTvState>(
+                builder: (context, state) {
+                  if (state is PopularListEmpty) {
+                    context.read<PopularTvBloc>().add(GetPopularTvEvent());
+                  }
+                  if (state is PopularListLoading) {
+                    return Center(
+                      child: CircularProgressIndicator(),
+                    );
+                  } else if (state is PopularListHasData) {
+                    final result = state.result;
+                    return TvShowList(result);
+                  } else if (state is PopularListError) {
+                    return Expanded(
+                      child: Center(
+                        child: Text(state.message),
+                      ),
+                    );
+                  } else {
+                    return Text('Failed');
+                  }
+                },
+              ),
               _buildSubHeading(
                 title: 'Top Rated',
                 onTap: () =>
                     Navigator.pushNamed(context, TopRatedTvShowsPage.ROUTE_NAME),
               ),
-              Consumer<TvShowListNotifier>(builder: (context, data, child) {
-                final state = data.topRatedTvShowsState;
-                if (state == RequestState.Loading) {
-                  return Center(
-                    child: CircularProgressIndicator(),
-                  );
-                } else if (state == RequestState.Loaded) {
-                  return TvShowList(data.topRatedTvShows);
-                } else {
-                  return Text('Failed');
-                }
-              }),
+              BlocBuilder<TopRatedTvBloc, TopRatedTvState>(
+                builder: (context, state) {
+                  if(state is TopRatedListEmpty) {
+                    context.read<TopRatedTvBloc>().add(GetTopRatedTvEvent());
+                  }
+                  if (state is TopRatedListLoading) {
+                    return Center(
+                      child: CircularProgressIndicator(),
+                    );
+                  } else if (state is TopRatedListHasData) {
+                    final result = state.result;
+                    return TvShowList(result);
+                  } else if (state is TopRatedListError) {
+                    return Expanded(
+                      child: Center(
+                        child: Text(state.message),
+                      ),
+                    );
+                  } else {
+                    return Text('Failed');
+                  }
+                },
+              ),
             ],
           ),
         ),
