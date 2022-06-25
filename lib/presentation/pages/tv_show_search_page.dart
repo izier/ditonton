@@ -5,7 +5,6 @@ import 'package:ditonton/presentation/bloc/search_tv/search_tv_state.dart';
 import 'package:ditonton/presentation/widgets/tv_show_card_list.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:provider/provider.dart';
 
 class TvShowSearchPage extends StatelessWidget {
   static const ROUTE_NAME = '/search-tv';

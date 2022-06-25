@@ -118,7 +118,6 @@ class TvShowDetailResponse extends Equatable {
   }
 
   @override
-  // TODO: implement props
   List<Object?> get props => [
     backdropPath,
     genres,
